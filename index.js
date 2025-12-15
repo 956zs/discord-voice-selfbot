@@ -40,9 +40,24 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
     // 情況 1: 用戶完全離開語音 → 機器人接管
     if (!newChannel) {
-        console.log(`[AUTO] User left voice. Resuming bot...`);
-        isPaused = false;
-        await joinVC();
+        console.log(`[AUTO] User appears to have left. Waiting 1.2s to confirm...`);
+        // 等待 1.2 秒，確認是真的離開而不是切換設備或暫時斷線
+        setTimeout(async () => {
+            // 重新檢查狀態
+            const freshGuild = await client.guilds.fetch(config.Guild).catch(() => null);
+            const freshChannel = freshGuild?.channels.cache.get(config.Channel);
+            const isUserStillIn = freshChannel?.members?.has(client.user.id);
+
+            if (isUserStillIn) {
+                console.log(`[AUTO] User is actually still in channel. Pausing bot.`);
+                isPaused = true;
+                leaveVC();
+            } else {
+                console.log(`[AUTO] User confirmed left. Resuming bot...`);
+                isPaused = false;
+                joinVC();
+            }
+        }, 1200);
         return;
     }
 
@@ -102,11 +117,11 @@ async function joinVC() {
         // 監聽連線狀態，判斷是否被"擠掉"
         connection.on(VoiceConnectionStatus.Disconnected, async () => {
             try {
-                // 等待一下確認狀態
+                // 等待 5 秒讓 API 狀態同步，並給用戶加入的時間
                 await Promise.race([
                     new Promise((resolve) => connection.once(VoiceConnectionStatus.Signalling, resolve)),
                     new Promise((resolve) => connection.once(VoiceConnectionStatus.Connecting, resolve)),
-                    new Promise((resolve) => setTimeout(resolve, 1000)),
+                    new Promise((resolve) => setTimeout(resolve, 5000)),
                 ]);
 
                 // 如果仍然是 Disconnected，檢查是否是用戶佔用了頻道
@@ -117,7 +132,7 @@ async function joinVC() {
 
                     if (freshChannel?.members?.has(client.user.id)) {
                         // 用戶還在頻道裡，但連線斷了 => 被本人擠掉
-                        console.log(`[AUTO] Detected user in channel. Pausing bot.`);
+                        console.log(`[AUTO] Detected user in channel (Squeeze). Pausing bot.`);
                         isPaused = true;
                         connection.destroy();
                     } else {
