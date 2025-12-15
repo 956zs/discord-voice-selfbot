@@ -16,7 +16,7 @@ let isPaused = false;
 client.on('ready', async () => {
     console.log(`Logged in as ${client.user.tag}!`);
     console.log(`Target: Guild ${config.Guild} | Channel ${config.Channel}`);
-    console.log(`Commands: &povv | !vc pause | !vc status`);
+    console.log(`Commands: &povv | ^-1 | ^-s`);
 
     await joinVC();
 });
@@ -65,12 +65,12 @@ client.on('messageCreate', async (message) => {
         console.log(`[RESUME] Joining channel...`);
         await message.delete().catch(() => { });
         await joinVC();
-    } else if (content === '!vc pause') {
+    } else if (content === '^-1') {
         isPaused = true;
         leaveVC();
         console.log(`[PAUSED] Bot left the channel.`);
         await message.delete().catch(() => { });
-    } else if (content === '!vc status') {
+    } else if (content === '^-s') {
         const status = isPaused ? 'PAUSED' : 'RUNNING';
         console.log(`[STATUS] ${status}`);
         await message.delete().catch(() => { });
