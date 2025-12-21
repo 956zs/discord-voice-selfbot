@@ -33,11 +33,11 @@ function getTimestamp() {
 }
 
 function log(...args) {
-    log(`[${getTimestamp()}]`, ...args);
+    console.log(`[${getTimestamp()}]`, ...args);
 }
 
 function logError(...args) {
-    logError(`[${getTimestamp()}]`, ...args);
+    console.error(`[${getTimestamp()}]`, ...args);
 }
 
 // ============ Webhook 通知 ============
