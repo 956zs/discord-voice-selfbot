@@ -280,6 +280,11 @@ client.on('ready', async () => {
 client.on('voiceStateUpdate', async (oldState, newState) => {
     if (oldState.member.id !== client.user.id) return;
 
+    // 只處理目標伺服器的語音狀態變化，忽略其他伺服器的語音活動
+    if (oldState.guild.id !== config.Guild && newState.guild.id !== config.Guild) {
+        return;
+    }
+
     const oldChannel = oldState.channelId;
     const newChannel = newState.channelId;
 
